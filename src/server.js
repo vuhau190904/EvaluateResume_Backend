@@ -6,6 +6,7 @@ import { connectDatabase, disconnectDatabase } from './database/prisma.js';
 import authRoutes from './controller/authController.js';
 import evaluateRoutes from './controller/evaluateController.js';
 import redisSubscriber from './database/redisSubscriber.js';
+import suggestRoutes from './controller/suggestController.js';
 
 
 dotenv.config();
@@ -48,6 +49,7 @@ app.use((req, res, next) => {
  */
 app.use('/api/auth', authRoutes);
 app.use('/api/evaluate', evaluateRoutes);
+app.use('/api/suggest', suggestRoutes);
 
 
 /**

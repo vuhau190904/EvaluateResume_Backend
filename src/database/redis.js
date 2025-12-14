@@ -14,6 +14,7 @@ class RedisClient {
     this.isConnected = false;
     this.queue = {
       evaluate: null,
+      suggest: null,
     };
   }
 
@@ -21,7 +22,7 @@ class RedisClient {
     try {
       const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
       const evaluateQueueName = process.env.EVALUATE_QUEUE_NAME || 'evaluate';
-            
+      const suggestQueueName = process.env.SUGGEST_QUEUE_NAME || 'suggest';
       this.client = new Redis(redisUrl, {
         retryStrategy: (times) => {
           const delay = Math.min(times * 50, 2000);
@@ -52,7 +53,9 @@ class RedisClient {
       this.queue.evaluate = new Queue(evaluateQueueName, {
         connection: redisUrl
       });
-      
+      this.queue.suggest = new Queue(suggestQueueName, {
+        connection: redisUrl
+      });
     } catch (error) {
       console.error('❌ Failed to connect to Redis:', error.message);
       throw error;
