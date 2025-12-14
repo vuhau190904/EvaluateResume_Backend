@@ -15,6 +15,7 @@ class RedisClient {
     this.queue = {
       evaluate: null,
       suggest: null,
+      interview: null,
     };
   }
 
@@ -23,6 +24,7 @@ class RedisClient {
       const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
       const evaluateQueueName = process.env.EVALUATE_QUEUE_NAME || 'evaluate';
       const suggestQueueName = process.env.SUGGEST_QUEUE_NAME || 'suggest';
+      const interviewQueueName = process.env.INTERVIEW_QUEUE_NAME || 'interview';
       this.client = new Redis(redisUrl, {
         retryStrategy: (times) => {
           const delay = Math.min(times * 50, 2000);
@@ -54,6 +56,9 @@ class RedisClient {
         connection: redisUrl
       });
       this.queue.suggest = new Queue(suggestQueueName, {
+        connection: redisUrl
+      });
+      this.queue.interview = new Queue(interviewQueueName, {
         connection: redisUrl
       });
     } catch (error) {
