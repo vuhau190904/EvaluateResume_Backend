@@ -2,9 +2,15 @@ import express from 'express';
 import authMiddleware from '../middleware/authMiddleware.js';
 import Constant from '../util/constant.js';
 import redisClient from '../database/redis.js';
+import { singleFileUpload } from '../middleware/fileMiddleware.js';
+import OpenAI from 'openai';
+import { Readable } from 'stream';
 
 
 const router = express.Router();
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 router.get(
   '/start',
@@ -137,5 +143,50 @@ router.get("/feedback", authMiddleware, async (req, res) => {
     });
   }
 });
+
+
+router.post(
+  '/speech-to-text',
+  authMiddleware,
+  singleFileUpload('file'),
+  async (req, res) => {
+    try {
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({
+          success: false,
+          message: 'Audio file is required',
+        });
+      }
+
+      // Convert buffer to a readable stream and attach a filename
+      const stream = new Readable();
+      stream.push(file.buffer);
+      stream.push(null);
+      // OpenAI SDK uses the file's path/name to infer format, so we set it here
+      stream.path = file.originalname || 'audio.webm';
+
+      const response = await openai.audio.transcriptions.create({
+        file: stream,
+        model: 'whisper-1',
+        language: 'en',
+      });
+
+      const transcription = (response.text || '').trim();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Transcribed audio successfully',
+        data: transcription,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message,
+      });
+    }
+  }
+);
 
 export default router;
